@@ -1,0 +1,15 @@
+
+export M2_HOME=/usr/local/apache-maven/apache-maven-3.0.5
+export M2=$M2_HOME/bin
+export PATH=$PATH:$M2
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-i386
+
+
+export STORM_PATH=/usr/local/storm/storm-0.8.2
+ 
+export PATH=$PATH:$M2:$JAVA_HOME/bin:$STORM_PATH/bin
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/tavi/workspace/libs/jnetpcap-1.3.0
+
+
+#./bin/mvn --version
