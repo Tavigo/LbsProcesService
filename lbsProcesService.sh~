@@ -1,0 +1,5 @@
+
+
+java -cp $STORM_PATH/lib/*:$STORM_PATH/storm-0.8.2.jar:\
+target/LbsProcesService.jar \
+com.kiribuki.processervice.TopologyMain;
