@@ -1,7 +1,10 @@
 package com.kiribuki.processervice;
 
 import com.kiribuki.processervice.spouts.SqsQueueSpout;
-import com.kiribuki.processervice.bolts.DeviceCounter;
+
+import com.kiribuki.processervice.bolts.DeviceCounterMongoDB;
+import com.kiribuki.processervice.bolts.SignalCounterMongoDB;
+import com.kiribuki.processervice.bolts.SignalHistoryMongoDB; 
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
@@ -29,8 +32,9 @@ public class TopologyMain {
 		// Definición de la topologia de STORM
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout("sqs-queue-reader",  new SqsQueueSpout(queueURL,false));
-		builder.setBolt("device-counter",new DeviceCounter(),5).shuffleGrouping("sqs-queue-reader");
-		
+		//builder.setBolt("device-counter-MongoDB",new DeviceCounterMongoDB(),5).shuffleGrouping("sqs-queue-reader");
+		//builder.setBolt("signal-counter-MongoDB",new SignalCounterMongoDB(),5).shuffleGrouping("sqs-queue-reader");
+		builder.setBolt("history-signal-MongoDB",new SignalHistoryMongoDB(),5).shuffleGrouping("sqs-queue-reader");
 		//Configuración 
 		Config conf = new Config();
 		conf.setDebug(false);
@@ -40,7 +44,7 @@ public class TopologyMain {
 		//conf.put(Config.TOPOLOGY_DEBUG, 1);
 		LocalCluster cluster = new LocalCluster();
 		cluster.submitTopology("Getting-Started-Topologie", conf, builder.createTopology());
-		Thread.sleep(200000);
+		Thread.sleep(20000000);
 		cluster.shutdown();
 	}
 

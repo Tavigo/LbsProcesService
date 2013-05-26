@@ -2,7 +2,10 @@
 
 package com.kiribuki.processervice.spouts;
 
+
 import java.util.Map;
+
+
 //import java.io.IOException;
 //import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,7 +34,13 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 
+import org.json.JSONObject;
+import org.json.JSONException;
+
+
 public class SqsQueueSpout implements IRichSpout {
+	
+	public static final long serialVersionUID = 1L;
 	
 	private SpoutOutputCollector collector;
 	private AmazonSQSAsync sqs;
@@ -51,7 +60,7 @@ public class SqsQueueSpout implements IRichSpout {
 		this.reliable = reliable;
 		this.sleepTime = 100;
 	}
-
+	
 	public void open(Map conf, TopologyContext context,
 			SpoutOutputCollector collector) {
 		// TODO Auto-generated method stub
@@ -86,26 +95,36 @@ public class SqsQueueSpout implements IRichSpout {
 	public void nextTuple() {
 		// TODO Auto-generated method stub
 		if (queue.isEmpty()) {
+			// Configuramos la acción ReceiveMessage, para que reciba de 10 en 10 mensajes, y no devuelva
+			// el atributo SentTimestamp (tiempo en que el mensaje se envio) de cada uno de los mensajes.
 			ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(
-					new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10));
+					new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10).withAttributeNames("SentTimestamp"));
 			queue.addAll(receiveMessageResult.getMessages());
 		}
-
-
 		Message message = queue.poll();
 		if (message != null) {
-			if (reliable) {
-				collector.emit(getStreamId(message), new Values(message.getBody()), message.getReceiptHandle());
-			} else {
-				// Delete it right away
-				sqs.deleteMessageAsync(new DeleteMessageRequest(queueUrl, message.getReceiptHandle()));
-				collector.emit(getStreamId(message), new Values(message.getBody()), message.getReceiptHandle());
+			try { 
+				JSONObject  json = new JSONObject(message.getBody());
+				//Añadimos cuando fue recibido el mensaje en la cola.
+				//Utilizamos ISO 8601
+				json.put("SentTimestamp",Long.parseLong(message.getAttributes().get("SentTimestamp")));
+				if (reliable) {
+					collector.emit(getStreamId(message), new Values(json.toString()), message.getReceiptHandle());
+				} else {
+					// Delete it right away
+					sqs.deleteMessageAsync(new DeleteMessageRequest(queueUrl, message.getReceiptHandle()));
+					collector.emit(getStreamId(message), new Values(json.toString()), message.getReceiptHandle());
+				}
+		
+			} catch (JSONException e) {
+				System.out.println(e.toString());
 			}
 		} else {
 			// Still empty, go to sleep.
 			System.out.print("HOLA!!!!");
 			Utils.sleep(this.sleepTime);
 		}
+	
 	}
 
 	public void ack(Object msgId) {
