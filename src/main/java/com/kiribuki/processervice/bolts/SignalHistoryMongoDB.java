@@ -34,10 +34,11 @@ public class SignalHistoryMongoDB implements IRichBolt {
 			OutputCollector collector) {
 		// TODO Auto-generated method stub
 		this.collector = collector;
-		this.name = context.getThisComponentId();
+		this.name = context.getThisComponentId();		
 		this.id = context.getThisTaskId();
 		try {
-			MongoClient MongoDB = new MongoClient("127.0.0.1", 27017);
+			MongoClient MongoDB = 
+					new MongoClient(stormConf.get("mongodbHOST").toString(), 27017);
 			DB db = MongoDB.getDB(DBname);
 			table = db.getCollection(CollectionName);
 		} catch (UnknownHostException e) {
