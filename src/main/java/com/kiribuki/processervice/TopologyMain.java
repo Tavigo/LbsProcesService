@@ -14,7 +14,8 @@ import backtype.storm.topology.TopologyBuilder;
 
 public class TopologyMain {
 
-	static String queueURL;
+	static String queueURL=null;
+	static String mongodbHOST=null;
 	/**
 	 * @param args
 	 */
@@ -23,9 +24,9 @@ public class TopologyMain {
 		
 		if (args.length >= 1) {
 			queueURL = args[0];
-	
+			mongodbHOST = args[1];
 		} else {
-			System.out.println("Falta parámetro de entrada; cola ha consumirS");
+			System.out.println("Falta parámetro de entrada; cola ha consumir");
 			System.exit(1);  
 		}
 		
@@ -34,14 +35,16 @@ public class TopologyMain {
 		builder.setSpout("sqs-queue-reader",  new SqsQueueSpout(queueURL,false));
 		//builder.setBolt("device-counter-MongoDB",new DeviceCounterMongoDB(),5).shuffleGrouping("sqs-queue-reader");
 		//builder.setBolt("signal-counter-MongoDB",new SignalCounterMongoDB(),5).shuffleGrouping("sqs-queue-reader");
-		builder.setBolt("history-signal-MongoDB",new SignalHistoryMongoDB(),5).shuffleGrouping("sqs-queue-reader");
-		//Configuración 
+		builder.setBolt("history-signal-MongoDB",new SignalHistoryMongoDB(),20).shuffleGrouping("sqs-queue-reader");
+		//Configuración: Aquí podemos poner los parámetros de configuración que 
+		// queremos que sean visibles en toda la topologia
 		Config conf = new Config();
 		conf.setDebug(false);
-		
-		//Correr la topologia.
+		conf.put("mongodbHOST", mongodbHOST);
 		conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
 		//conf.put(Config.TOPOLOGY_DEBUG, 1);
+		
+		// Ponemos en marcha la topologia
 		LocalCluster cluster = new LocalCluster();
 		cluster.submitTopology("Getting-Started-Topologie", conf, builder.createTopology());
 		Thread.sleep(20000000);
