@@ -27,6 +27,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
+
 //import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
@@ -99,7 +100,9 @@ public class SqsQueueSpout implements IRichSpout {
 			// el atributo SentTimestamp (tiempo en que el mensaje se envio) de cada uno de los mensajes.
 			ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(
 					new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10).withAttributeNames("SentTimestamp"));
+		
 			queue.addAll(receiveMessageResult.getMessages());
+			
 		}
 		Message message = queue.poll();
 		if (message != null) {
